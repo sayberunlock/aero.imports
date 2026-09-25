@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import "@/styles/globals.css";
-import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { Providers } from "@/components/Providers";
 import { siteConfig } from "@/lib/site-config";
@@ -111,11 +111,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
         <Providers>
-          <IntroOverlay siteName={config.name} />
-          <Header />
-          <main id="conteudo-principal">{children}</main>
-          <Footer />
-          <WhatsAppButton whatsappNumber={config.whatsapp} />
+          <SiteChrome
+            intro={<IntroOverlay siteName={config.name} />}
+            footer={<Footer />}
+            whatsapp={<WhatsAppButton whatsappNumber={config.whatsapp} />}
+          >
+            {children}
+          </SiteChrome>
         </Providers>
       </body>
     </html>

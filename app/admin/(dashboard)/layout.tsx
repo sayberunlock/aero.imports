@@ -23,28 +23,117 @@ import {
   LogOut,
   Menu,
   X,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdminOnboarding, type OnboardingSection } from "@/components/admin/AdminOnboarding";
 
-const sections = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/produtos", label: "Produtos", icon: Package },
-  { href: "/admin/categorias", label: "Categorias", icon: FolderTree },
-  { href: "/admin/pedidos", label: "Pedidos", icon: ShoppingCart },
-  { href: "/admin/clientes", label: "Clientes", icon: Users },
-  { href: "/admin/cupons", label: "Cupons", icon: Tag },
-  { href: "/admin/banners", label: "Banners", icon: ImageIcon },
-  { href: "/admin/videos", label: "Vídeos", icon: Video },
-  { href: "/admin/novidades", label: "Novidades", icon: Newspaper },
-  { href: "/admin/blog", label: "Blog", icon: FileText },
-  { href: "/admin/paginas", label: "Páginas", icon: FileText },
-  { href: "/admin/equipe", label: "Equipe", icon: UsersRound },
-  { href: "/admin/mensagens", label: "Mensagens", icon: MessageSquare },
-  { href: "/admin/seo", label: "SEO", icon: Search },
-  { href: "/admin/usuarios", label: "Usuários", icon: ShieldAlert },
-  { href: "/admin/backup", label: "Backup", icon: DatabaseBackup },
-  { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
+const sections: OnboardingSection[] = [
+  {
+    href: "/admin",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    description: "Visão geral rápida da loja: pedidos do dia, produtos ativos, clientes e mensagens.",
+  },
+  {
+    href: "/admin/produtos",
+    label: "Produtos",
+    icon: Package,
+    description: "Cadastra, edita e organiza os produtos da loja: fotos, preço, estoque e ficha técnica.",
+  },
+  {
+    href: "/admin/categorias",
+    label: "Categorias",
+    icon: FolderTree,
+    description: "Organiza os produtos por categoria (Drones, Câmeras, Estabilizadores...) usadas nos menus e filtros do site.",
+  },
+  {
+    href: "/admin/pedidos",
+    label: "Pedidos",
+    icon: ShoppingCart,
+    description: "Acompanha os pedidos feitos pelos clientes.",
+  },
+  {
+    href: "/admin/clientes",
+    label: "Clientes",
+    icon: Users,
+    description: "Lista de clientes cadastrados na loja.",
+  },
+  {
+    href: "/admin/cupons",
+    label: "Cupons",
+    icon: Tag,
+    description: "Cria códigos de desconto para promoções.",
+  },
+  {
+    href: "/admin/banners",
+    label: "Banners",
+    icon: ImageIcon,
+    description: "Controla as imagens de destaque que aparecem no site.",
+  },
+  {
+    href: "/admin/videos",
+    label: "Vídeos",
+    icon: Video,
+    description: "Gerencia os vídeos usados no site, como o vídeo de fundo da página inicial.",
+  },
+  {
+    href: "/admin/novidades",
+    label: "Novidades",
+    icon: Newspaper,
+    description: "Publica avisos e novidades que aparecem na aba \"Novidades\" do site.",
+  },
+  {
+    href: "/admin/blog",
+    label: "Blog",
+    icon: FileText,
+    description: "Escreve e publica posts do blog da loja.",
+  },
+  {
+    href: "/admin/paginas",
+    label: "Páginas",
+    icon: FileText,
+    description: "Edita o texto de páginas institucionais: Empresa, FAQ, Garantia, Termos de Uso, Privacidade.",
+  },
+  {
+    href: "/admin/equipe",
+    label: "Equipe",
+    icon: UsersRound,
+    description: "Gerencia a equipe exibida na página \"Empresa\" do site.",
+  },
+  {
+    href: "/admin/mensagens",
+    label: "Mensagens",
+    icon: MessageSquare,
+    description: "Mensagens recebidas pelo site, como pelo formulário de contato.",
+  },
+  {
+    href: "/admin/seo",
+    label: "SEO",
+    icon: Search,
+    description: "Configurações que ajudam o site a aparecer melhor no Google (título, descrição etc.).",
+  },
+  {
+    href: "/admin/usuarios",
+    label: "Usuários",
+    icon: ShieldAlert,
+    description: "Gerencia quem tem acesso ao painel admin — cria novos logins pra sua equipe.",
+  },
+  {
+    href: "/admin/backup",
+    label: "Backup",
+    icon: DatabaseBackup,
+    description: "Faz backup dos dados da loja.",
+  },
+  {
+    href: "/admin/configuracoes",
+    label: "Configurações",
+    icon: Settings,
+    description: "Dados gerais da loja: nome, WhatsApp, e-mail e endereço.",
+  },
 ];
+
+const ONBOARDING_KEY = "aero-admin-onboarding-seen";
 
 /**
  * Bug de mobile corrigido nesta sessão: a sidebar antes usava
@@ -56,10 +145,23 @@ const sections = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     setMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    const alreadySeen = window.localStorage.getItem(ONBOARDING_KEY);
+    if (!alreadySeen) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  function closeOnboarding() {
+    window.localStorage.setItem(ONBOARDING_KEY, "1");
+    setShowOnboarding(false);
+  }
 
   return (
     <div className="flex min-h-screen bg-fog">
@@ -107,9 +209,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           ))}
         </nav>
+        <button
+          type="button"
+          onClick={() => setShowOnboarding(true)}
+          className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-steel hover:bg-white/5 hover:text-cloud"
+        >
+          <HelpCircle size={17} strokeWidth={1.6} />
+          Ajuda
+        </button>
         <Link
           href="/api/auth/signout"
-          className="mt-4 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-steel hover:bg-white/5 hover:text-cloud"
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-steel hover:bg-white/5 hover:text-cloud"
         >
           <LogOut size={17} strokeWidth={1.6} />
           Sair
@@ -117,6 +227,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <main className="flex-1 p-6 pt-20 lg:p-10 lg:pt-10">{children}</main>
+
+      <AdminOnboarding open={showOnboarding} onClose={closeOnboarding} sections={sections} />
     </div>
   );
 }
