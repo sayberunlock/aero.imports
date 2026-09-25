@@ -15,12 +15,13 @@ export function ProductGallery({ images, productName }: Props) {
 
   const goPrev = () => setIndex((i) => (i === 0 ? photos.length - 1 : i - 1));
   const goNext = () => setIndex((i) => (i === photos.length - 1 ? 0 : i + 1));
+  const current = photos[index] ?? photos[0];
 
   return (
     <div>
       <div className="relative aspect-square overflow-hidden rounded-2xl bg-fog">
         <Image
-          src={photos[index]}
+          src={current}
           alt={`${productName} — foto ${index + 1}`}
           fill
           sizes="(max-width: 1024px) 100vw, 50vw"
