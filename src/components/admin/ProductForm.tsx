@@ -332,15 +332,11 @@ export function ProductForm({
                     onClick={() =>
                       setValues((v) => {
                         const images = [...v.images];
-<<<<<<< HEAD
                         const previous = images[i - 1];
                         const current = images[i];
                         if (previous === undefined || current === undefined) return v;
                         images[i - 1] = current;
                         images[i] = previous;
-=======
-                        [images[i - 1], images[i]] = [images[i], images[i - 1]];
->>>>>>> 5d199612baa974cca1232ab57e9caf54664f0a9b
                         return { ...v, images };
                       })
                     }
