@@ -115,6 +115,31 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+              {/*
+                Favoritos e Minha conta ficam escondidos do cabeçalho em telas
+                pequenas (classe "hidden sm:block" nos ícones acima, pensada
+                pra não lotar o cabeçalho no celular). Sem esta seção, quem
+                está no celular em modo retrato não tinha NENHUM jeito de
+                chegar nessas duas páginas — só girando a tela pra paisagem,
+                o que não é um fluxo razoável. Agora ficam aqui dentro do
+                próprio menu hambúrguer.
+              */}
+              <Link
+                href="/favoritos"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 border-b border-ink/10 py-3 text-ink/90"
+              >
+                <Heart size={18} strokeWidth={1.6} />
+                Favoritos
+              </Link>
+              <Link
+                href="/conta"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-2 py-3 text-ink/90"
+              >
+                <User size={18} strokeWidth={1.6} />
+                Minha conta
+              </Link>
             </div>
           </motion.nav>
         )}
