@@ -47,12 +47,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Já existe um produto com esse slug." }, { status: 409 });
   }
 
-  const { imageUrl, ...productData } = parsed.data;
+  const { images, ...productData } = parsed.data;
 
   const product = await db.product.create({
     data: {
       ...productData,
-      images: imageUrl ? { create: [{ url: imageUrl, position: 0 }] } : undefined,
+      images:
+        images && images.length > 0
+          ? { create: images.map((url, position) => ({ url, position })) }
+          : undefined,
     },
   });
 

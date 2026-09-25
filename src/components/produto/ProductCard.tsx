@@ -51,7 +51,7 @@ export function ProductCard({ product }: { product: ProductSummary }) {
               alt={product.name}
               fill
               sizes="(max-width: 768px) 50vw, 25vw"
-              className="object-contain p-6"
+              className="object-contain p-1"
               loading="lazy"
             />
           </motion.div>

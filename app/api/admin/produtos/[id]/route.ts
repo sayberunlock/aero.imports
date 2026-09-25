@@ -64,17 +64,19 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
   }
 
-  const { imageUrl, ...productData } = parsed.data;
+  const { images, ...productData } = parsed.data;
 
   const product = await db.product.update({
     where: { id: params.id },
     data: {
       ...productData,
-      ...(imageUrl !== undefined
+      ...(images !== undefined
         ? {
             images: {
               deleteMany: {},
-              ...(imageUrl ? { create: [{ url: imageUrl, position: 0 }] } : {}),
+              ...(images.length > 0
+                ? { create: images.map((url, position) => ({ url, position })) }
+                : {}),
             },
           }
         : {}),
