@@ -1,6 +1,13 @@
 import { Package, ShoppingCart, Users, MessageSquare } from "lucide-react";
 import { db } from "@/lib/db";
 
+// Todas as outras páginas do admin já usam isso (ver produtos/page.tsx,
+// pedidos/page.tsx etc.) — sem essa linha, o Next.js entende que esta
+// página não depende de nada dinâmico e a pré-renderiza uma vez no build,
+// "congelando" os números no valor de quando o deploy foi feito, em vez de
+// consultar o banco a cada visita.
+export const dynamic = "force-dynamic";
+
 /**
  * Antes desta correção, os 4 números do dashboard eram um placeholder fixo
  * ("—" no código, sem nenhuma consulta ao banco) e o aviso "conecte o banco
