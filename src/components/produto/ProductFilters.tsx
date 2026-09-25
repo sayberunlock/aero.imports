@@ -1,11 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { SlidersHorizontal, Search, X } from "lucide-react";
 import { ProductCard } from "@/components/produto/ProductCard";
 import type { ProductSummary } from "@/lib/types";
 
 type Category = { slug: string; label: string };
+
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
 
 export function ProductFilters({
   products,
@@ -14,24 +23,28 @@ export function ProductFilters({
   products: ProductSummary[];
   categories: readonly Category[];
 }) {
+  const searchParams = useSearchParams();
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [onlyInStock, setOnlyInStock] = useState(false);
   const [onlyOnSale, setOnlyOnSale] = useState(false);
   const [onlyNew, setOnlyNew] = useState(false);
+  const [search, setSearch] = useState(searchParams.get("busca") ?? "");
 
   function toggleCategory(slug: string) {
     setSelectedCategories((prev) => (prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]));
   }
 
   const filtered = useMemo(() => {
+    const q = normalize(search);
     return products.filter((p) => {
+      if (q && !normalize(p.name).includes(q) && !normalize(p.brand).includes(q)) return false;
       if (selectedCategories.length > 0 && !selectedCategories.includes(p.categorySlug)) return false;
       if (onlyInStock && p.badge === "Esgotado") return false;
       if (onlyOnSale && p.badge !== "Promoção") return false;
       if (onlyNew && p.badge !== "Novo") return false;
       return true;
     });
-  }, [products, selectedCategories, onlyInStock, onlyOnSale, onlyNew]);
+  }, [products, search, selectedCategories, onlyInStock, onlyOnSale, onlyNew]);
 
   return (
     <div className="flex flex-col gap-8 lg:flex-row">
@@ -39,6 +52,25 @@ export function ProductFilters({
         <div className="flex items-center gap-2 border-b border-fog pb-4 text-sm font-medium text-ink">
           <SlidersHorizontal size={16} />
           Filtros
+        </div>
+
+        <div className="border-b border-fog py-5">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-ink">Buscar</p>
+          <div className="flex items-center gap-2 rounded-lg border border-fog px-3 py-2">
+            <Search size={15} className="shrink-0 text-steel" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Nome ou marca…"
+              className="w-full bg-transparent text-sm text-ink outline-none placeholder:text-steel/70"
+            />
+            {search && (
+              <button aria-label="Limpar busca" onClick={() => setSearch("")} className="shrink-0 text-steel hover:text-signal">
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         <FilterGroup title="Categoria">

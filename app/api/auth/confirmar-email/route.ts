@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { resetPasswordWithCodeSchema } from "@/lib/validation";
+import { confirmEmailSchema } from "@/lib/validation";
 import { db } from "@/lib/db";
-import { hashPassword } from "@/lib/auth";
 import { verifyCode } from "@/lib/verification-codes";
 import { rateLimit } from "@/lib/rate-limit";
 
@@ -14,7 +13,7 @@ const REASON_MESSAGES: Record<string, string> = {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  const parsed = resetPasswordWithCodeSchema.safeParse(body);
+  const parsed = confirmEmailSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       { message: parsed.error.issues[0]?.message ?? "Dados inválidos." },
@@ -22,7 +21,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { email, code, password } = parsed.data;
+  const { email, code } = parsed.data;
 
   const { allowed, retryAfterSeconds } = await rateLimit("codeVerify", email);
   if (!allowed) {
@@ -37,14 +36,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Código inválido ou expirado." }, { status: 400 });
   }
 
-  const result = await verifyCode(user.id, "RESET_PASSWORD", code);
+  if (user.emailVerified) {
+    return NextResponse.json({ message: "E-mail já confirmado." });
+  }
+
+  const result = await verifyCode(user.id, "SIGNUP", code);
   if (!result.ok) {
     return NextResponse.json({ message: REASON_MESSAGES[result.reason] }, { status: 400 });
   }
 
-  const passwordHash = await hashPassword(password);
+  await db.user.update({ where: { id: user.id }, data: { emailVerified: new Date() } });
 
-  await db.user.update({ where: { id: user.id }, data: { passwordHash } });
-
-  return NextResponse.json({ message: "Senha redefinida com sucesso." });
+  return NextResponse.json({ message: "E-mail confirmado com sucesso." });
 }

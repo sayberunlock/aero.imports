@@ -43,6 +43,7 @@ model User {
   reviews       Review[]
   auditLogs     AuditLog[]
   passwordResetTokens PasswordResetToken[]
+  verificationCodes   VerificationCode[]
 
   @@index([email])
 }
@@ -347,6 +348,10 @@ model SiteSetting {
   value String
 }
 
+// Não é mais usado no código (o fluxo de redefinição de senha passou a usar
+// código de 6 dígitos por e-mail, ver model VerificationCode abaixo). Mantido
+// no schema apenas para não exigir um DROP TABLE manual; pode ser removido
+// futuramente numa limpeza de banco.
 model PasswordResetToken {
   id        String   @id @default(cuid())
   userId    String
@@ -357,6 +362,25 @@ model PasswordResetToken {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+// Código numérico de 6 dígitos enviado por e-mail, usado para:
+// - SIGNUP: confirmar o e-mail de quem acabou de criar uma conta
+// - RESET_PASSWORD: confirmar a identidade de quem pediu para redefinir a senha
+// Guardamos apenas o hash do código (nunca o código em texto puro), com
+// validade curta e limite de tentativas para dificultar força bruta.
+model VerificationCode {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeHash   String
+  purpose    String    // SIGNUP | RESET_PASSWORD
+  expiresAt  DateTime
+  attempts   Int       @default(0)
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId, purpose])
 }
 
 model AuditLog {

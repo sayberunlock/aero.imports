@@ -27,6 +27,21 @@ export const changePasswordSchema = z
     path: ["confirmPassword"],
   });
 
+export const emailSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+});
+
+export const confirmEmailSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  code: z.string().regex(/^\d{6}$/, "O código deve ter 6 dígitos"),
+});
+
+export const resetPasswordWithCodeSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  code: z.string().regex(/^\d{6}$/, "O código deve ter 6 dígitos"),
+  password: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
+});
+
 export const contactSchema = z.object({
   name: z.string().min(2).max(120),
   email: z.string().email(),

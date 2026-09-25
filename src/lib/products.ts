@@ -156,3 +156,27 @@ export async function getOnSaleProducts(): Promise<ProductSummary[]> {
   const all = await getAllProducts();
   return all.filter((p) => p.badge === "Promoção" || (p.salePriceCents != null && p.salePriceCents < p.priceCents));
 }
+
+/**
+ * Remove acentos para permitir busca "arroz sem sal" (ex.: usuário digita
+ * "camera" e encontra "câmera").
+ */
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+/**
+ * Busca por nome ou marca do produto. Usada pela lupa no cabeçalho e pelo
+ * campo de busca da página /produtos (parâmetro ?busca=).
+ */
+export async function searchProducts(query: string): Promise<ProductSummary[]> {
+  const q = normalize(query);
+  if (!q) return [];
+
+  const all = await getAllProducts();
+  return all.filter((p) => normalize(p.name).includes(q) || normalize(p.brand).includes(q));
+}

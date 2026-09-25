@@ -24,6 +24,11 @@ function LoginForm() {
     const result = await signIn("credentials", { email, password, redirect: false });
     setSubmitting(false);
 
+    if (result?.error === "EMAIL_NAO_VERIFICADO") {
+      setError("EMAIL_NAO_VERIFICADO");
+      return;
+    }
+
     if (result?.error) {
       setError("E-mail ou senha incorretos.");
       return;
@@ -39,7 +44,19 @@ function LoginForm() {
       <h1 className="mt-3 font-display text-display-md font-medium text-ink">Entrar</h1>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        {error && <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+        {error === "EMAIL_NAO_VERIFICADO" ? (
+          <p className="rounded-lg bg-fog px-4 py-3 text-sm text-ink">
+            Confirme seu e-mail antes de entrar.{" "}
+            <Link
+              href={`/conta/confirmar-email?email=${encodeURIComponent(email)}`}
+              className="font-medium text-signal hover:underline"
+            >
+              Confirmar agora
+            </Link>
+          </p>
+        ) : (
+          error && <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
+        )}
 
         <label className="block">
           <span className="mb-1.5 block text-xs font-medium text-steel">E-mail</span>

@@ -36,6 +36,13 @@ export const authOptions: NextAuthOptions = {
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) return null;
 
+        // Só exigimos e-mail confirmado de clientes (CUSTOMER) — contas
+        // ADMIN/SUPPORT são criadas pela equipe (seed ou painel), nunca pelo
+        // cadastro público, e não devem ficar bloqueadas por isso.
+        if (user.role === "CUSTOMER" && !user.emailVerified) {
+          throw new Error("EMAIL_NAO_VERIFICADO");
+        }
+
         return {
           id: user.id,
           name: user.name,

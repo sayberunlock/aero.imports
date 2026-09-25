@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Heart, User, ShoppingBag, Menu, X } from "lucide-react";
 import { navLinks } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
+import { SearchOverlay } from "@/components/layout/SearchOverlay";
 
 /**
  * Rotas cuja primeira dobra tem fundo escuro (Hero em tela cheia).
@@ -21,6 +22,7 @@ export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -66,7 +68,11 @@ export function Header() {
         </nav>
 
         <div className={cn("flex items-center gap-4", textToneMuted)}>
-          <button aria-label="Buscar produtos" className="transition-colors hover:text-signal">
+          <button
+            aria-label="Buscar produtos"
+            className="transition-colors hover:text-signal"
+            onClick={() => setSearchOpen(true)}
+          >
             <Search size={20} strokeWidth={1.6} />
           </button>
           <Link href="/favoritos" aria-label="Favoritos" className="hidden transition-colors hover:text-signal sm:block">
@@ -113,6 +119,8 @@ export function Header() {
           </motion.nav>
         )}
       </AnimatePresence>
+
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

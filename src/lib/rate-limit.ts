@@ -10,6 +10,12 @@ const limiters = {
   contact: new RateLimiterMemory({ points: 5, duration: 60 * 10 }),
   checkout: new RateLimiterMemory({ points: 10, duration: 60 }),
   api: new RateLimiterMemory({ points: 60, duration: 60 }),
+  // Envio de código por e-mail (cadastro, reenvio, esqueci minha senha):
+  // limita por e-mail para não permitir spam de mensagens a um destinatário.
+  emailCode: new RateLimiterMemory({ points: 3, duration: 60 * 10 }), // 3 envios / 10min
+  // Verificação de código digitado: limita tentativas por e-mail, além do
+  // contador de tentativas por código já guardado no banco.
+  codeVerify: new RateLimiterMemory({ points: 10, duration: 60 * 10 }),
 };
 
 export async function rateLimit(

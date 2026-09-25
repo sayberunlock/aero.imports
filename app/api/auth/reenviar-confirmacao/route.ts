@@ -17,37 +17,36 @@ export async function POST(req: Request) {
   const { allowed, retryAfterSeconds } = await rateLimit("emailCode", email);
   if (!allowed) {
     return NextResponse.json(
-      { message: "Você já pediu um código recentemente. Aguarde alguns minutos e tente de novo." },
+      { message: "Você já pediu um novo código recentemente. Aguarde alguns minutos e tente de novo." },
       { status: 429, headers: { "Retry-After": String(retryAfterSeconds ?? 60) } }
     );
   }
 
-  const user = await db.user.findUnique({ where: { email } });
-
-  // Resposta idêntica exista ou não o e-mail, para não vazar quais e-mails
-  // estão cadastrados (enumeração de contas).
+  // Resposta idêntica em qualquer caso, para não revelar se o e-mail existe
+  // ou já está confirmado.
   const genericResponse = NextResponse.json({
-    message: "Se este e-mail estiver cadastrado, você receberá um código de confirmação em instantes.",
+    message: "Se houver um cadastro pendente de confirmação para este e-mail, um novo código foi enviado.",
   });
 
-  if (!user) return genericResponse;
+  const user = await db.user.findUnique({ where: { email } });
+  if (!user || user.emailVerified) return genericResponse;
 
-  const code = await createVerificationCode(user.id, "RESET_PASSWORD");
+  const code = await createVerificationCode(user.id, "SIGNUP");
 
   try {
     await sendMail({
       to: user.email,
-      subject: "Código para redefinir sua senha — Aero Imports",
+      subject: "Seu novo código de confirmação — Aero Imports",
       html: verificationCodeEmailHtml({
-        heading: "Redefinir senha",
-        intro: `Olá, ${user.name}! Use o código abaixo para criar uma nova senha da sua conta na Aero Imports.`,
+        heading: "Confirme seu e-mail",
+        intro: `Olá, ${user.name}! Aqui está seu novo código para confirmar seu e-mail na Aero Imports.`,
         code,
-        footerNote: "Esse código é válido por 15 minutos. Se você não pediu isso, ignore este e-mail e sua senha continuará a mesma.",
+        footerNote: "Esse código é válido por 15 minutos.",
       }),
-      text: `Seu código para redefinir a senha na Aero Imports: ${code} (válido por 15 minutos).`,
+      text: `Seu código de confirmação Aero Imports: ${code} (válido por 15 minutos).`,
     });
   } catch (err) {
-    console.error("[recuperar-senha] Falha ao enviar e-mail:", err);
+    console.error("[reenviar-confirmacao] Falha ao enviar e-mail:", err);
   }
 
   return genericResponse;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { ProductFilters } from "@/components/produto/ProductFilters";
 import { getAllProducts } from "@/lib/products";
 import { mainCategories } from "@/lib/site-config";
@@ -23,7 +24,9 @@ export default async function ProdutosPage() {
         </h1>
       </header>
 
-      <ProductFilters products={products} categories={mainCategories} />
+      <Suspense fallback={null}>
+        <ProductFilters products={products} categories={mainCategories} />
+      </Suspense>
     </div>
   );
 }
