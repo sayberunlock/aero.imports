@@ -1,12 +1,12 @@
 "use client";
 
-import { X } from "lucide-react";
+import { X, type LucideIcon } from "lucide-react";
 
 export type OnboardingSection = {
   href: string;
   label: string;
   description: string;
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  icon: LucideIcon;
 };
 
 type Props = {
