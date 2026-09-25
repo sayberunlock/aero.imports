@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
+import { rateLimit } from "@/lib/rate-limit";
 
 /**
  * Configuração central de autenticação.
@@ -29,6 +30,14 @@ export const authOptions: NextAuthOptions = {
         const parsed = loginSchema.safeParse(raw);
         if (!parsed.success) return null;
         const { email, password } = parsed.data;
+
+        // Limita tentativas de login por e-mail — antes desta correção, o
+        // limitador "login" existia no código mas nunca era chamado aqui,
+        // então a tela de login do admin não tinha nenhum limite real.
+        const { allowed } = await rateLimit("login", email);
+        if (!allowed) {
+          throw new Error("MUITAS_TENTATIVAS");
+        }
 
         const user = await db.user.findUnique({ where: { email } });
         if (!user) return null;

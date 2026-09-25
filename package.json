@@ -23,6 +23,7 @@
     "framer-motion": "11.3.19",
     "gsap": "3.12.5",
     "helmet": "7.1.0",
+    "ioredis": "5.4.1",
     "isomorphic-dompurify": "2.13.0",
     "lucide-react": "0.408.0",
     "nanoid": "5.0.7",

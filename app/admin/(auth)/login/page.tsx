@@ -25,6 +25,11 @@ export default function AdminLoginPage() {
 
     setLoading(false);
 
+    if (res?.error === "MUITAS_TENTATIVAS") {
+      setError("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.");
+      return;
+    }
+
     if (res?.error) {
       setError("E-mail ou senha inválidos.");
       return;

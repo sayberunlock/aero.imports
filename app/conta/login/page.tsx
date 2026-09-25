@@ -29,6 +29,11 @@ function LoginForm() {
       return;
     }
 
+    if (result?.error === "MUITAS_TENTATIVAS") {
+      setError("Muitas tentativas de login. Aguarde alguns minutos e tente novamente.");
+      return;
+    }
+
     if (result?.error) {
       setError("E-mail ou senha incorretos.");
       return;
