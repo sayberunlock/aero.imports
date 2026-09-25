@@ -12,12 +12,12 @@ const isDev = process.env.NODE_ENV !== "production";
 // vídeos não aparecem". Em produção (`next build && next start`) o bundle
 // não usa eval(), então mantemos a CSP restrita normalmente.
 const scriptSrc = isDev
-  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net"
-  : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net";
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://connect.facebook.net https://upload-widget.cloudinary.com"
+  : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://upload-widget.cloudinary.com";
 
 const connectSrc = isDev
-  ? "connect-src 'self' ws: wss: https://www.google-analytics.com https://api.whatsapp.com"
-  : "connect-src 'self' https://www.google-analytics.com https://api.whatsapp.com";
+  ? "connect-src 'self' ws: wss: https://www.google-analytics.com https://api.whatsapp.com https://api.cloudinary.com https://upload-widget.cloudinary.com"
+  : "connect-src 'self' https://www.google-analytics.com https://api.whatsapp.com https://api.cloudinary.com https://upload-widget.cloudinary.com";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -34,7 +34,7 @@ const securityHeaders = [
       scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       connectSrc,
-      "frame-src 'self' https://www.google.com",
+      "frame-src 'self' https://www.google.com https://upload-widget.cloudinary.com",
     ].join("; "),
   },
 ];
