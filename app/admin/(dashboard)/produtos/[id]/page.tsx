@@ -8,7 +8,10 @@ export const dynamic = "force-dynamic";
 
 export default async function EditProductPage({ params }: { params: { id: string } }) {
   const [product, categories] = await Promise.all([
-    db.product.findUnique({ where: { id: params.id } }),
+    db.product.findUnique({
+      where: { id: params.id },
+      include: { images: { orderBy: { position: "asc" }, take: 1 } },
+    }),
     db.category.findMany({ orderBy: { name: "asc" } }),
   ]);
 
@@ -38,6 +41,7 @@ export default async function EditProductPage({ params }: { params: { id: string
             stock: product.stock,
             categoryId: product.categoryId,
             weightGrams: product.weightGrams,
+            imageUrl: product.images[0]?.url ?? "",
           }}
         />
       </div>

@@ -64,7 +64,22 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     }
   }
 
-  const product = await db.product.update({ where: { id: params.id }, data: parsed.data });
+  const { imageUrl, ...productData } = parsed.data;
+
+  const product = await db.product.update({
+    where: { id: params.id },
+    data: {
+      ...productData,
+      ...(imageUrl !== undefined
+        ? {
+            images: {
+              deleteMany: {},
+              ...(imageUrl ? { create: [{ url: imageUrl, position: 0 }] } : {}),
+            },
+          }
+        : {}),
+    },
+  });
 
   await db.auditLog.create({
     data: {

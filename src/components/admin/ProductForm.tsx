@@ -18,7 +18,21 @@ export type ProductFormValues = {
   stock: number;
   categoryId: string;
   weightGrams?: number | null;
+  imageUrl?: string | null;
 };
+
+// Converte centavos para o texto que aparece no campo (ex.: 150000 -> "1500,00").
+function centsToInputText(cents: number | null | undefined) {
+  if (!cents) return "";
+  return (cents / 100).toFixed(2).replace(".", ",");
+}
+
+// Converte o texto digitado pelo usuário (aceita "," ou ".") de volta para centavos.
+function inputTextToCents(text: string): number {
+  const normalized = text.replace(/\./g, "").replace(",", ".");
+  const value = parseFloat(normalized);
+  return Number.isFinite(value) ? Math.round(value * 100) : 0;
+}
 
 function slugify(text: string) {
   return text
@@ -51,11 +65,19 @@ export function ProductForm({
       stock: 0,
       categoryId: categories[0]?.id ?? "",
       weightGrams: null,
+      imageUrl: "",
     }
   );
   const [slugTouched, setSlugTouched] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Texto "solto" dos campos de preço — não é reformatado a cada tecla,
+  // só quando o campo perde o foco. Isso evita o cursor pular enquanto
+  // o usuário digita (ex.: tentar digitar "1500" e o campo virar "0,01",
+  // "0,15", "1,50"... a cada dígito).
+  const [priceText, setPriceText] = useState(centsToInputText(initial?.priceCents));
+  const [salePriceText, setSalePriceText] = useState(centsToInputText(initial?.salePriceCents));
 
   function handleNameChange(name: string) {
     setValues((v) => ({
@@ -184,13 +206,17 @@ export function ProductForm({
         <Field label="Preço (R$)" hint={values.priceCents ? formatBRL(values.priceCents) : undefined}>
           <input
             required
-            type="number"
-            min={0}
-            step="0.01"
-            value={values.priceCents ? (values.priceCents / 100).toFixed(2) : ""}
-            onChange={(e) =>
-              setValues((v) => ({ ...v, priceCents: Math.round(parseFloat(e.target.value || "0") * 100) }))
-            }
+            type="text"
+            inputMode="decimal"
+            placeholder="0,00"
+            value={priceText}
+            onChange={(e) => {
+              // Permite só números, vírgula e ponto enquanto digita.
+              const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
+              setPriceText(cleaned);
+              setValues((v) => ({ ...v, priceCents: inputTextToCents(cleaned) }));
+            }}
+            onBlur={() => setPriceText(centsToInputText(values.priceCents))}
             className="input"
           />
         </Field>
@@ -199,16 +225,19 @@ export function ProductForm({
           hint="Deixe vazio se não houver promoção."
         >
           <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={values.salePriceCents ? (values.salePriceCents / 100).toFixed(2) : ""}
-            onChange={(e) =>
+            type="text"
+            inputMode="decimal"
+            placeholder="0,00"
+            value={salePriceText}
+            onChange={(e) => {
+              const cleaned = e.target.value.replace(/[^0-9.,]/g, "");
+              setSalePriceText(cleaned);
               setValues((v) => ({
                 ...v,
-                salePriceCents: e.target.value ? Math.round(parseFloat(e.target.value) * 100) : null,
-              }))
-            }
+                salePriceCents: cleaned ? inputTextToCents(cleaned) : null,
+              }));
+            }}
+            onBlur={() => setSalePriceText(centsToInputText(values.salePriceCents))}
             className="input"
           />
         </Field>
@@ -224,6 +253,29 @@ export function ProductForm({
           className="input"
         />
       </Field>
+
+      <Field
+        label="Imagem principal (URL)"
+        hint="Cole o link de uma imagem já hospedada (Cloudinary, Imgur, etc.). Upload direto de arquivo ainda não está configurado."
+      >
+        <input
+          type="url"
+          placeholder="https://..."
+          value={values.imageUrl ?? ""}
+          onChange={(e) => setValues((v) => ({ ...v, imageUrl: e.target.value }))}
+          className="input"
+        />
+      </Field>
+
+      {values.imageUrl && (
+        <img
+          src={values.imageUrl}
+          alt="Pré-visualização"
+          className="h-40 w-40 rounded-lg border border-fog object-cover"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+          onLoad={(e) => (e.currentTarget.style.display = "block")}
+        />
+      )}
 
       <div className="flex items-center gap-3 pt-2">
         <button
