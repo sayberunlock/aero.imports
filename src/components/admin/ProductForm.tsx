@@ -19,8 +19,10 @@ export type ProductFormValues = {
   stock: number;
   categoryId: string;
   weightGrams?: number | null;
-  imageUrl?: string | null;
+  images: string[];
 };
+
+const MAX_PRODUCT_IMAGES = 6;
 
 // Converte centavos para o texto que aparece no campo (ex.: 150000 -> "1500,00").
 function centsToInputText(cents: number | null | undefined) {
@@ -66,7 +68,7 @@ export function ProductForm({
       stock: 0,
       categoryId: categories[0]?.id ?? "",
       weightGrams: null,
-      imageUrl: "",
+      images: [],
     }
   );
   const [slugTouched, setSlugTouched] = useState(isEditing);
@@ -256,8 +258,8 @@ export function ProductForm({
       </Field>
 
       <Field
-        label="Imagem principal"
-        hint="Envie uma foto do computador (JPG, PNG ou WEBP)."
+        label="Fotos do produto"
+        hint={`Envie até ${MAX_PRODUCT_IMAGES} fotos (JPG, PNG ou WEBP). A primeira foto da lista é a que aparece na vitrine da loja.`}
       >
         <div className="flex items-center gap-3">
           <CldUploadWidget
@@ -265,52 +267,98 @@ export function ProductForm({
             options={{
               cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
               sources: ["local", "camera"],
-              multiple: false,
-              maxFiles: 1,
+              multiple: true,
+              maxFiles: MAX_PRODUCT_IMAGES,
               clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
               maxFileSize: 8_000_000,
               language: "pt",
               text: {
                 pt: {
-                  local: { browse: "Escolher do computador", dd_title_single: "Arraste a foto aqui" },
+                  local: { browse: "Escolher do computador", dd_title_multiple: "Arraste as fotos aqui" },
                 },
               },
             }}
             onSuccess={(result: CloudinaryUploadWidgetResults) => {
               const info = result.info;
               if (info && typeof info === "object" && "secure_url" in info) {
-                setValues((v) => ({ ...v, imageUrl: info.secure_url as string }));
+                setValues((v) =>
+                  v.images.length >= MAX_PRODUCT_IMAGES
+                    ? v
+                    : { ...v, images: [...v.images, info.secure_url as string] }
+                );
               }
             }}
           >
             {({ open }) => (
               <button
                 type="button"
+                disabled={values.images.length >= MAX_PRODUCT_IMAGES}
                 onClick={() => open()}
-                className="rounded-full border border-fog bg-white px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-fog"
+                className="rounded-full border border-fog bg-white px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-fog disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {values.imageUrl ? "Trocar foto" : "Enviar foto"}
+                {values.images.length >= MAX_PRODUCT_IMAGES
+                  ? "Limite de fotos atingido"
+                  : values.images.length > 0
+                  ? "Adicionar mais fotos"
+                  : "Enviar fotos"}
               </button>
             )}
           </CldUploadWidget>
-          {values.imageUrl && (
-            <button
-              type="button"
-              onClick={() => setValues((v) => ({ ...v, imageUrl: "" }))}
-              className="text-xs font-medium text-red-600 hover:underline"
-            >
-              Remover
-            </button>
-          )}
+          <span className="text-xs text-steel">
+            {values.images.length} de {MAX_PRODUCT_IMAGES}
+          </span>
         </div>
       </Field>
 
-      {values.imageUrl && (
-        <img
-          src={values.imageUrl}
-          alt="Pré-visualização"
-          className="h-40 w-40 rounded-lg border border-fog object-cover"
-        />
+      {values.images.length > 0 && (
+        <div className="flex flex-wrap gap-3">
+          {values.images.map((url, i) => (
+            <div key={url + i} className="relative">
+              <img
+                src={url}
+                alt={`Foto ${i + 1}`}
+                className="h-28 w-28 rounded-lg border border-fog object-cover"
+              />
+              {i === 0 && (
+                <span className="absolute left-1 top-1 rounded-full bg-ink/80 px-2 py-0.5 text-[10px] font-medium text-cloud">
+                  Principal
+                </span>
+              )}
+              <div className="absolute -right-1.5 -top-1.5 flex gap-1">
+                {i > 0 && (
+                  <button
+                    type="button"
+                    title="Mover para posição anterior"
+                    onClick={() =>
+                      setValues((v) => {
+                        const images = [...v.images];
+                        const previous = images[i - 1];
+                        const current = images[i];
+                        if (previous === undefined || current === undefined) return v;
+                        images[i - 1] = current;
+                        images[i] = previous;
+                        return { ...v, images };
+                      })
+                    }
+                    className="flex h-6 w-6 items-center justify-center rounded-full border border-fog bg-white text-xs text-ink shadow-sm hover:bg-fog"
+                  >
+                    ←
+                  </button>
+                )}
+                <button
+                  type="button"
+                  title="Remover foto"
+                  onClick={() =>
+                    setValues((v) => ({ ...v, images: v.images.filter((_, idx) => idx !== i) }))
+                  }
+                  className="flex h-6 w-6 items-center justify-center rounded-full border border-red-200 bg-white text-xs text-red-600 shadow-sm hover:bg-red-50"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <div className="flex items-center gap-3 pt-2">

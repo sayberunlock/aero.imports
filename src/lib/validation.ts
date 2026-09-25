@@ -49,10 +49,7 @@ export const productSchema = z.object({
   stock: z.number().int().min(0),
   categoryId: z.string().cuid(),
   weightGrams: z.number().int().positive().nullable().optional(),
-  imageUrl: z
-    .union([z.string().url(), z.literal("")])
-    .nullable()
-    .optional(),
+  images: z.array(z.string().url()).max(6, "Máximo de 6 fotos por produto.").optional(),
 });
 
 export const couponSchema = z.object({
