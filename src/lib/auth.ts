@@ -47,10 +47,18 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role;
         token.mustChangePassword = user.mustChangePassword;
+      }
+      // Chamado explicitamente pela tela de troca de senha (via update()
+      // do next-auth/react) assim que a senha é trocada com sucesso —
+      // sem isso, o token continuava com mustChangePassword=true até a
+      // sessão expirar (8h) ou o usuário sair e entrar de novo, mesmo com
+      // o banco já atualizado.
+      if (trigger === "update" && session?.mustChangePassword === false) {
+        token.mustChangePassword = false;
       }
       return token;
     },

@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { KeyRound } from "lucide-react";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const { update } = useSession();
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,7 @@ export default function ChangePasswordPage() {
       return;
     }
 
+    await update({ mustChangePassword: false });
     router.push("/admin");
     router.refresh();
   }

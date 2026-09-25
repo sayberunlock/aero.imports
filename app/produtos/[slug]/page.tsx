@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ShieldCheck, Truck, MessageCircle } from "lucide-react";
 import { getAllProducts, getProductBySlug } from "@/lib/products";
 import { formatBRL, installmentLabel } from "@/lib/utils";
 import { siteConfig } from "@/lib/site-config";
 import { ProductCard } from "@/components/produto/ProductCard";
+import { ProductGallery } from "@/components/produto/ProductGallery";
 import { AddToCartButton } from "@/components/produto/AddToCartButton";
 import { BuyNowButton } from "@/components/produto/BuyNowButton";
 import { Reveal } from "@/components/ui/Reveal";
@@ -65,16 +65,7 @@ export default async function ProductDetailPage({ params }: Props) {
       />
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl bg-fog">
-          <Image
-            src={product.imageUrl}
-            alt={product.name}
-            fill
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-contain p-4"
-            priority
-          />
-        </div>
+        <ProductGallery images={product.gallery.length > 0 ? product.gallery : [product.imageUrl]} productName={product.name} />
 
         <div>
           <p className="eyebrow-mono text-signal">{product.brand}</p>
@@ -135,19 +126,6 @@ export default async function ProductDetailPage({ params }: Props) {
           )}
         </div>
       </div>
-
-      {product.gallery.length > 1 && (
-        <section className="mt-16">
-          <p className="eyebrow-mono text-signal">Galeria</p>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {product.gallery.map((url, i) => (
-              <div key={url + i} className="relative aspect-square overflow-hidden rounded-xl bg-fog">
-                <Image src={url} alt={`${product.name} — imagem ${i + 1}`} fill className="object-contain p-4" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section className="mt-16 border-t border-fog pt-10">
         <p className="eyebrow-mono text-signal">Avaliações</p>
