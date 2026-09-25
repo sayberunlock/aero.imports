@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CldUploadWidget, type CloudinaryUploadWidgetResults } from "next-cloudinary";
 import { formatBRL } from "@/lib/utils";
 
 type Category = { id: string; name: string };
@@ -255,16 +256,53 @@ export function ProductForm({
       </Field>
 
       <Field
-        label="Imagem principal (URL)"
-        hint="Cole o link de uma imagem já hospedada (Cloudinary, Imgur, etc.). Upload direto de arquivo ainda não está configurado."
+        label="Imagem principal"
+        hint="Envie uma foto do computador (JPG, PNG ou WEBP)."
       >
-        <input
-          type="url"
-          placeholder="https://..."
-          value={values.imageUrl ?? ""}
-          onChange={(e) => setValues((v) => ({ ...v, imageUrl: e.target.value }))}
-          className="input"
-        />
+        <div className="flex items-center gap-3">
+          <CldUploadWidget
+            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+            options={{
+              cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+              sources: ["local", "camera"],
+              multiple: false,
+              maxFiles: 1,
+              clientAllowedFormats: ["jpg", "jpeg", "png", "webp"],
+              maxFileSize: 8_000_000,
+              language: "pt",
+              text: {
+                pt: {
+                  local: { browse: "Escolher do computador", dd_title_single: "Arraste a foto aqui" },
+                },
+              },
+            }}
+            onSuccess={(result: CloudinaryUploadWidgetResults) => {
+              const info = result.info;
+              if (info && typeof info === "object" && "secure_url" in info) {
+                setValues((v) => ({ ...v, imageUrl: info.secure_url as string }));
+              }
+            }}
+          >
+            {({ open }) => (
+              <button
+                type="button"
+                onClick={() => open()}
+                className="rounded-full border border-fog bg-white px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-fog"
+              >
+                {values.imageUrl ? "Trocar foto" : "Enviar foto"}
+              </button>
+            )}
+          </CldUploadWidget>
+          {values.imageUrl && (
+            <button
+              type="button"
+              onClick={() => setValues((v) => ({ ...v, imageUrl: "" }))}
+              className="text-xs font-medium text-red-600 hover:underline"
+            >
+              Remover
+            </button>
+          )}
+        </div>
       </Field>
 
       {values.imageUrl && (
@@ -272,8 +310,6 @@ export function ProductForm({
           src={values.imageUrl}
           alt="Pré-visualização"
           className="h-40 w-40 rounded-lg border border-fog object-cover"
-          onError={(e) => (e.currentTarget.style.display = "none")}
-          onLoad={(e) => (e.currentTarget.style.display = "block")}
         />
       )}
 
