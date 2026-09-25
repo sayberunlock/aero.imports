@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#EEF1F4"/>
+<g fill="none" stroke="#7C8B9A" stroke-width="2" opacity="0.5">
+<circle cx="600.0" cy="295.0" r="36"/>
+<path d="M540.0 375.0 L580.0 325.0 L610.0 355.0 L630.0 330.0 L670.0 375.0 Z"/>
+</g>
+<text x="50%" y="88%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="42" fill="#7C8B9A">Aero Imports</text>
+</svg>

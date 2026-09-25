@@ -1,0 +1,374 @@
+// Schema do banco de dados — Aero Imports
+// Rodar `npx prisma db push` (dev) ou `npx prisma migrate deploy` (produção)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Banco PostgreSQL online (ex.: Neon) — necessário para publicar no Vercel,
+// porque o Vercel não guarda arquivos entre um acesso e outro (então um banco
+// em arquivo, como o SQLite, não funciona lá). A DATABASE_URL vem do painel
+// do banco e do painel do Vercel (Environment Variables), nunca deste arquivo.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Usuários & Autenticação
+// ---------------------------------------------------------------------------
+
+// Nota: SQLite (usado como banco local — ver seção 1-A do README) não
+// suporta enums nativos do Prisma, por isso os campos abaixo que antes
+// eram enum agora são String. Os valores válidos continuam os mesmos
+// (documentados em comentário), só sem o enforcement de tipo do banco —
+// a validação desses valores é feita em código (Zod) nas rotas de API.
+// Valores válidos: CUSTOMER | ADMIN | SUPPORT
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String
+  role          String    @default("CUSTOMER") // CUSTOMER | ADMIN | SUPPORT
+  mustChangePassword Boolean @default(false)
+  phone         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  addresses     Address[]
+  orders        Order[]
+  favorites     Favorite[]
+  reviews       Review[]
+  auditLogs     AuditLog[]
+  passwordResetTokens PasswordResetToken[]
+
+  @@index([email])
+}
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label      String   // "Casa", "Trabalho"
+  recipient  String
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  state      String
+  zip        String
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Catálogo
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  imageUrl    String?
+  parentId    String?
+  parent      Category? @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Valores válidos: EM_ESTOQUE | ESGOTADO | SOB_ENCOMENDA | ARQUIVADO
+
+model Product {
+  id               String        @id @default(cuid())
+  name             String
+  slug             String        @unique
+  brand            String
+  model            String
+  description      String
+  shortDescription String?
+  priceCents       Int
+  salePriceCents   Int?
+  installmentsMax  Int           @default(12)
+  weightGrams      Int?
+  stock            Int           @default(0)
+  status           String        @default("EM_ESTOQUE") // EM_ESTOQUE | ESGOTADO | SOB_ENCOMENDA | ARQUIVADO
+  isNew            Boolean       @default(false)
+  isFeatured       Boolean       @default(false)
+  isOnSale         Boolean       @default(false)
+  isLaunch         Boolean       @default(false)
+  isArchived       Boolean       @default(false)
+
+  categoryId       String
+  category         Category      @relation(fields: [categoryId], references: [id])
+
+  tags             ProductTag[]
+  images           ProductImage[]
+  videos           ProductVideo[]
+  specs            ProductSpec[]
+  reviews          Review[]
+  favorites        Favorite[]
+  orderItems       OrderItem[]
+  relatedFrom      ProductRelation[] @relation("RelatedFrom")
+  relatedTo        ProductRelation[] @relation("RelatedTo")
+
+  seoTitle         String?
+  seoDescription   String?
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model ProductRelation {
+  id         String  @id @default(cuid())
+  productId  String
+  relatedId  String
+  product    Product @relation("RelatedFrom", fields: [productId], references: [id], onDelete: Cascade)
+  related    Product @relation("RelatedTo", fields: [relatedId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedId])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  position  Int     @default(0)
+}
+
+model ProductVideo {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  thumbnailUrl String?
+  position  Int     @default(0)
+}
+
+model ProductSpec {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  label     String
+  value     String
+  position  Int     @default(0)
+}
+
+model Tag {
+  id       String       @id @default(cuid())
+  name     String       @unique
+  products ProductTag[]
+}
+
+model ProductTag {
+  productId String
+  tagId     String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([productId, tagId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ---------------------------------------------------------------------------
+// Pedidos & Pagamento
+// ---------------------------------------------------------------------------
+
+// Valores válidos: AGUARDANDO_PAGAMENTO | PAGO | EM_SEPARACAO | ENVIADO | ENTREGUE | CANCELADO | REEMBOLSADO
+
+model Order {
+  id             String      @id @default(cuid())
+  number         String      @unique // ex: AI-2026-00001
+  userId         String
+  user           User        @relation(fields: [userId], references: [id])
+  status         String      @default("AGUARDANDO_PAGAMENTO") // ver valores válidos no comentário acima do enum removido
+  items          OrderItem[]
+  subtotalCents  Int
+  shippingCents  Int
+  discountCents  Int         @default(0)
+  totalCents     Int
+  couponId       String?
+  coupon         Coupon?     @relation(fields: [couponId], references: [id])
+  shippingAddress String     // JSON serializado como string (JSON.stringify/parse no código) — SQLite não tem tipo Json nativo
+  paymentMethod  String?
+  paymentRef     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitPriceCents Int
+}
+
+model Coupon {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  percentOff    Int?
+  amountOffCents Int?
+  minOrderCents Int?
+  maxUses       Int?
+  usedCount     Int      @default(0)
+  expiresAt     DateTime?
+  active        Boolean  @default(true)
+  orders        Order[]
+  createdAt     DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Conteúdo (Banners, Vídeos institucionais, Blog, Páginas, Equipe)
+// ---------------------------------------------------------------------------
+
+model Banner {
+  id        String   @id @default(cuid())
+  title     String
+  subtitle  String?
+  imageUrl  String
+  mobileImageUrl String?
+  ctaLabel  String?
+  ctaUrl    String?
+  position  Int      @default(0)
+  active    Boolean  @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime @default(now())
+}
+
+model SiteVideo {
+  id           String   @id @default(cuid())
+  title        String
+  placement    String   // ex: "home-hero", "empresa-destaque"
+  url          String
+  thumbnailUrl String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  url       String
+  type      String   // image | video | pdf
+  filename  String
+  altText   String?
+  createdAt DateTime @default(now())
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String
+  coverImage  String?
+  authorName  String
+  category    String?
+  seoTitle    String?
+  seoDescription String?
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  slug      String   @unique // ex: "empresa", "faq", "garantia"
+  title     String
+  content   String
+  seoTitle  String?
+  seoDescription String?
+  updatedAt DateTime @updatedAt
+}
+
+model TeamMember {
+  id       String  @id @default(cuid())
+  name     String
+  role     String
+  photoUrl String?
+  position Int     @default(0)
+}
+
+// ---------------------------------------------------------------------------
+// Mensagens, SEO, Configurações, Logs
+// ---------------------------------------------------------------------------
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SiteSetting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?  // JSON serializado como string (JSON.stringify/parse no código) — SQLite não tem tipo Json nativo
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}
