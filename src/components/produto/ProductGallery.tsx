@@ -4,18 +4,20 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+const FALLBACK_IMAGE = "/images/products/placeholder-drone.svg";
+
 type Props = {
   images: string[];
   productName: string;
 };
 
 export function ProductGallery({ images, productName }: Props) {
-  const photos = images.length > 0 ? images : ["/images/products/placeholder-drone.svg"];
+  const photos = images.length > 0 ? images : [FALLBACK_IMAGE];
   const [index, setIndex] = useState(0);
 
   const goPrev = () => setIndex((i) => (i === 0 ? photos.length - 1 : i - 1));
   const goNext = () => setIndex((i) => (i === photos.length - 1 ? 0 : i + 1));
-  const current = photos[index] ?? photos[0];
+  const current = photos[index] ?? photos[0] ?? FALLBACK_IMAGE;
 
   return (
     <div>
