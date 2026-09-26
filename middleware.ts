@@ -97,50 +97,56 @@ function maintenanceResponse() {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isAdminOrApi = pathname.startsWith("/admin") || pathname.startsWith("/api");
 
-  // ---- Rotas públicas: checa modo manutenção -------------------------
-  if (!isAdminOrApi) {
-    // Só checa em navegações de página (Accept: text/html), pra não gastar
-    // consulta ao banco em cada imagem/vídeo/asset carregado pela página.
-    const acceptsHtml = req.headers.get("accept")?.includes("text/html") ?? true;
-    if (acceptsHtml && (await isMaintenanceModeOn())) {
-      return maintenanceResponse();
+  // ---- Rotas /admin: lógica original de autenticação -----------------
+  if (pathname.startsWith("/admin")) {
+    const isPublicAdminRoute = PUBLIC_ADMIN_ROUTES.some((r) => pathname.startsWith(r));
+    const token = await getToken({ req });
+
+    // Usuário já logado tentando acessar /admin/login: manda direto pro dashboard.
+    if (isPublicAdminRoute) {
+      if (token) {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+      return NextResponse.next();
     }
+
+    // Sem sessão: manda para o login.
+    if (!token) {
+      const loginUrl = new URL("/admin/login", req.url);
+      loginUrl.searchParams.set("callbackUrl", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Bloqueia qualquer papel que não seja ADMIN/SUPPORT dentro do painel.
+    const role = (token as any)?.role;
+    if (role !== "ADMIN" && role !== "SUPPORT") {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+
+    // Força troca de senha no primeiro acesso.
+    const mustChange = (token as any)?.mustChangePassword;
+    if (mustChange && !pathname.startsWith("/admin/trocar-senha")) {
+      return NextResponse.redirect(new URL("/admin/trocar-senha", req.url));
+    }
+
     return NextResponse.next();
   }
 
-  // ---- A partir daqui, é a lógica original de autenticação do /admin --
-  const isPublicAdminRoute = PUBLIC_ADMIN_ROUTES.some((r) => pathname.startsWith(r));
-  const token = await getToken({ req });
-
-  // Usuário já logado tentando acessar /admin/login: manda direto pro dashboard.
-  if (isPublicAdminRoute) {
-    if (token) {
-      return NextResponse.redirect(new URL("/admin", req.url));
-    }
+  // ---- Rotas /api: nunca passam pela checagem de admin nem manutenção -
+  // (mesmo comportamento de antes dessa sessão: o middleware não mexia
+  // nessas rotas, incluindo /api/auth/... que o próprio login usa)
+  if (pathname.startsWith("/api")) {
     return NextResponse.next();
   }
 
-  // Sem sessão: manda para o login.
-  if (!token) {
-    const loginUrl = new URL("/admin/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(loginUrl);
+  // ---- Demais rotas públicas: checa modo manutenção -------------------
+  // Só checa em navegações de página (Accept: text/html), pra não gastar
+  // consulta ao banco em cada imagem/vídeo/asset carregado pela página.
+  const acceptsHtml = req.headers.get("accept")?.includes("text/html") ?? true;
+  if (acceptsHtml && (await isMaintenanceModeOn())) {
+    return maintenanceResponse();
   }
-
-  // Bloqueia qualquer papel que não seja ADMIN/SUPPORT dentro do painel.
-  const role = (token as any)?.role;
-  if (role !== "ADMIN" && role !== "SUPPORT") {
-    return NextResponse.redirect(new URL("/admin/login", req.url));
-  }
-
-  // Força troca de senha no primeiro acesso.
-  const mustChange = (token as any)?.mustChangePassword;
-  if (mustChange && !pathname.startsWith("/admin/trocar-senha")) {
-    return NextResponse.redirect(new URL("/admin/trocar-senha", req.url));
-  }
-
   return NextResponse.next();
 }
 
