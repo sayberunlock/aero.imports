@@ -8,6 +8,12 @@ const FIELDS = [
   { key: "site.whatsapp", label: "WhatsApp (só números, com DDI)", hint: "Ex.: 5541999999999" },
   { key: "site.email", label: "E-mail de contato" },
   { key: "site.address", label: "Endereço", multiline: true },
+  {
+    key: "site.maintenanceMode",
+    label: "Modo manutenção",
+    type: "switch" as const,
+    hint: "Quando ligado, os visitantes veem uma tela de \"Voltamos já\" em vez do site. O painel /admin continua acessível normalmente. Pode levar até ~15 segundos pra valer depois de salvar.",
+  },
 ];
 
 export default async function AdminConfiguracoesPage() {
