@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import "@/styles/globals.css";
 import { Footer } from "@/components/layout/Footer";
 import { SiteChrome } from "@/components/layout/SiteChrome";
@@ -119,6 +120,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </SiteChrome>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
