@@ -38,6 +38,7 @@ function dbToSummary(p: any): ProductSummary {
     imageUrl: p.images?.[0]?.url ?? "/images/products/placeholder-drone.svg",
     badge: toBadge(p),
     categorySlug: p.category?.slug ?? "",
+    installmentsWithInterest: Boolean(p.installmentsWithInterest),
   };
 }
 

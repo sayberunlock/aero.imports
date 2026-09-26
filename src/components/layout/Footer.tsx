@@ -83,7 +83,7 @@ export async function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-content flex-col items-center justify-between gap-2 px-6 py-6 text-xs text-steel lg:flex-row lg:px-10">
           <p>© {year} Aero Imports. Todos os direitos reservados.</p>
-          <p>CNPJ a definir · Site em conformidade com a LGPD</p>
+          <p>CNPJ 59.889.989/0001-89 · Site em conformidade com a LGPD</p>
           <a
             href="https://www.instagram.com/gui_oliveira_tcn/"
             target="_blank"

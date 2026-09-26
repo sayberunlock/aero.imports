@@ -76,7 +76,9 @@ export default async function ProductDetailPage({ params }: Props) {
               <p className="text-sm text-steel line-through">{formatBRL(product.priceCents)}</p>
             )}
             <p className="font-display text-3xl font-medium text-aero">{formatBRL(finalPrice)}</p>
-            <p className="mt-1 text-sm text-steel">{installmentLabel(finalPrice)}</p>
+            <p className="mt-1 text-sm text-steel">
+              {installmentLabel(finalPrice, 12, product.installmentsWithInterest)}
+            </p>
           </div>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">

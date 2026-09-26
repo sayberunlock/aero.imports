@@ -19,6 +19,7 @@ export type ProductFormValues = {
   stock: number;
   categoryId: string;
   weightGrams?: number | null;
+  installmentsWithInterest: boolean;
   images: string[];
 };
 
@@ -68,6 +69,7 @@ export function ProductForm({
       stock: 0,
       categoryId: categories[0]?.id ?? "",
       weightGrams: null,
+      installmentsWithInterest: false,
       images: [],
     }
   );
@@ -255,6 +257,22 @@ export function ProductForm({
           onChange={(e) => setValues((v) => ({ ...v, stock: parseInt(e.target.value || "0", 10) }))}
           className="input"
         />
+      </Field>
+
+      <Field
+        label="Parcelamento no cartão"
+        hint="Define o texto exibido no site: 'ou 12x de R$ X sem juros' ou 'com juros'."
+      >
+        <select
+          value={values.installmentsWithInterest ? "com" : "sem"}
+          onChange={(e) =>
+            setValues((v) => ({ ...v, installmentsWithInterest: e.target.value === "com" }))
+          }
+          className="input"
+        >
+          <option value="sem">Sem juros</option>
+          <option value="com">Com juros</option>
+        </select>
       </Field>
 
       <Field

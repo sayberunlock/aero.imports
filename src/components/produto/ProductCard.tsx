@@ -75,7 +75,11 @@ export function ProductCard({ product }: { product: ProductSummary }) {
               </span>
             )}
             <p className="mt-0.5 text-xs text-steel">
-              {installmentLabel(hasDiscount ? product.salePriceCents! : product.priceCents)}
+              {installmentLabel(
+                hasDiscount ? product.salePriceCents! : product.priceCents,
+                12,
+                product.installmentsWithInterest
+              )}
             </p>
           </div>
         </div>

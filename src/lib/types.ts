@@ -8,6 +8,7 @@ export type ProductSummary = {
   imageUrl: string;
   badge?: "Novo" | "Promoção" | "Esgotado" | "Sob encomenda" | null;
   categorySlug: string;
+  installmentsWithInterest?: boolean;
 };
 
 export type ProductDetail = ProductSummary & {

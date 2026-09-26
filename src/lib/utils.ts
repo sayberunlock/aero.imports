@@ -12,7 +12,12 @@ export function formatBRL(cents: number): string {
   });
 }
 
-export function installmentLabel(cents: number, maxInstallments = 12): string {
+export function installmentLabel(
+  cents: number,
+  maxInstallments = 12,
+  withInterest = false
+): string {
   const perInstallment = cents / maxInstallments;
-  return `ou ${maxInstallments}x de ${formatBRL(perInstallment)} sem juros`;
+  const suffix = withInterest ? "com juros" : "sem juros";
+  return `ou ${maxInstallments}x de ${formatBRL(perInstallment)} ${suffix}`;
 }

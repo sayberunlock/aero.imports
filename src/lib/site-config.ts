@@ -18,7 +18,7 @@ export const siteConfig = {
   url: (process.env.NEXT_PUBLIC_SITE_URL || "").trim().replace(/\/+$/, "") || "https://www.aeroimports.com.br",
   phone: "+55 44 99137-5357",
   whatsapp: "5544991375357", // Número oficial da Aero Imports (somente números, com DDI+DDD)
-  email: "contato@aeroimports.com.br", // TODO: confirmar e-mail oficial
+  email: "aeroimports.ofc@gmail.com",
   address: {
     street: "Rua Ipiranga, 574 — Zona 1",
     city: "Cianorte",

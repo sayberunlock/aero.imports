@@ -41,6 +41,7 @@ export default async function EditProductPage({ params }: { params: { id: string
             stock: product.stock,
             categoryId: product.categoryId,
             weightGrams: product.weightGrams,
+            installmentsWithInterest: product.installmentsWithInterest,
             images: product.images.map((img) => img.url),
           }}
         />

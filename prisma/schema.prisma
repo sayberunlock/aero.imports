@@ -96,6 +96,7 @@ model Product {
   priceCents       Int
   salePriceCents   Int?
   installmentsMax  Int           @default(12)
+  installmentsWithInterest Boolean @default(false) // false = parcelamento sem juros (padrão); true = com juros
   weightGrams      Int?
   stock            Int           @default(0)
   status           String        @default("EM_ESTOQUE") // EM_ESTOQUE | ESGOTADO | SOB_ENCOMENDA | ARQUIVADO
