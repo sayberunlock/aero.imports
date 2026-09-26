@@ -75,8 +75,8 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ["/images/og-cover.svg"],
     },
     icons: {
-      // "/icon.svg" é servido automaticamente pela convenção do App Router
-      // a partir de app/icon.svg — não precisa ser listado aqui.
+      icon: "/favicon.ico",
+      shortcut: "/favicon.ico",
       apple: "/apple-touch-icon.png",
     },
   };
